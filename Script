@@ -65,6 +65,9 @@ local function onFootballKicked(hit)
     if hit.Parent and hit.Parent:FindFirstChild("Humanoid") then
         local football = getFootball()
         if football then
+            -- Stop physics interaction by setting the velocity to 0
+            football.Velocity = Vector3.new(0, 0, 0)  -- Reset the velocity to prevent it from sticking
+
             -- Check which toggle is active and teleport accordingly
             if homeActive then
                 football.CFrame = HOME_CFRAME
