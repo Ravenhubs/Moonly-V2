@@ -65,9 +65,9 @@ local function onFootballKicked(hit)
     if hit.Parent and hit.Parent:FindFirstChild("Humanoid") then
         local football = getFootball()
         if football then
-            -- Stop physics interaction by setting the velocity to 0
-            football.Velocity = Vector3.new(0, 0, 0)  -- Reset the velocity to prevent it from sticking
-
+            -- Disable physics temporarily by setting it to a non-collidable state
+            football.Anchored = true  -- Prevent the ball from being influenced by physics
+            
             -- Check which toggle is active and teleport accordingly
             if homeActive then
                 football.CFrame = HOME_CFRAME
@@ -78,6 +78,14 @@ local function onFootballKicked(hit)
             else
                 print("No team toggle active.")
             end
+            
+            -- Reactivate physics after teleporting
+            game:GetService("Debris"):AddItem(football, 0.1)  -- Disable Anchored for a brief moment to allow teleportation
+            wait(0.1)
+            football.Anchored = false  -- Restore physics interaction
+
+            -- Optional: Reset the ball's velocity to stop it from sticking to the player
+            football.Velocity = Vector3.new(0, 0, 0)
         end
     end
 end
