@@ -40,6 +40,7 @@ local Section = Tab:CreateSection("monday")
 
 local Divider = Tab:CreateDivider()
 
+
 -- CFrame positions for Home and Away
 local HOME_CFRAME = CFrame.new(-242.376602, 10.8505239, -49.222084)
 local AWAY_CFRAME = CFrame.new(319.823425, 10.8505239, -49.222084) * CFrame.Angles(0, math.rad(180), 0)
@@ -65,9 +66,6 @@ local function onFootballKicked(hit)
     if hit.Parent and hit.Parent:FindFirstChild("Humanoid") then
         local football = getFootball()
         if football then
-            -- Disable physics temporarily by setting it to a non-collidable state
-            football.Anchored = true  -- Prevent the ball from being influenced by physics
-            
             -- Check which toggle is active and teleport accordingly
             if homeActive then
                 football.CFrame = HOME_CFRAME
@@ -75,25 +73,27 @@ local function onFootballKicked(hit)
             elseif awayActive then
                 football.CFrame = AWAY_CFRAME
                 print("Football teleported to Away!")
-            else
-                print("No team toggle active.")
             end
-            
-            -- Reactivate physics after teleporting
-            game:GetService("Debris"):AddItem(football, 0.1)  -- Disable Anchored for a brief moment to allow teleportation
-            wait(0.1)
-            football.Anchored = false  -- Restore physics interaction
-
-            -- Optional: Reset the ball's velocity to stop it from sticking to the player
-            football.Velocity = Vector3.new(0, 0, 0)
         end
     end
 end
 
--- Detect football kick (using touch detection)
-local football = getFootball()
-if football then
-    football.Touched:Connect(onFootballKicked)
+-- Function to start or stop the detection based on toggle state
+local function updateFootballDetection()
+    local football = getFootball()
+    if not football then
+        return
+    end
+
+    -- If either toggle is on, enable the touch detection for teleportation
+    if homeActive or awayActive then
+        football.Touched:Connect(onFootballKicked) -- Detect touch events for teleportation
+    else
+        -- Disable any previously connected events by disconnecting the Touched event
+        for _, connection in pairs(football.Touched:GetConnections()) do
+            connection:Disconnect()
+        end
+    end
 end
 
 -- Home toggle
@@ -103,11 +103,12 @@ local HomeToggle = Tab:CreateToggle({
     Flag = "TeleportHomeToggle",
     Callback = function(Value)
         homeActive = Value
-        if Value then
+        if homeActive then
             print("Home toggle activated.")
         else
             print("Home toggle deactivated.")
         end
+        updateFootballDetection()  -- Update football detection based on toggle state
     end,
 })
 
@@ -118,10 +119,11 @@ local AwayToggle = Tab:CreateToggle({
     Flag = "TeleportAwayToggle",
     Callback = function(Value)
         awayActive = Value
-        if Value then
+        if awayActive then
             print("Away toggle activated.")
         else
             print("Away toggle deactivated.")
         end
+        updateFootballDetection()  -- Update football detection based on toggle state
     end,
 })
