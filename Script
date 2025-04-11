@@ -40,10 +40,13 @@ local Section = Tab:CreateSection("monday")
 
 local Divider = Tab:CreateDivider()
 
--- CFrame positions
+-- CFrame positions for Home and Away
 local HOME_CFRAME = CFrame.new(-242.376602, 10.8505239, -49.222084)
 local AWAY_CFRAME = CFrame.new(319.823425, 10.8505239, -49.222084) * CFrame.Angles(0, math.rad(180), 0)
-local originalCFrame = CFrame.new(0, 10, 0)  -- Set the original position for the football if necessary (replace with actual start position)
+
+-- Toggle state for Home and Away
+local homeActive = false
+local awayActive = false
 
 -- Function to get the football
 local function getFootball()
@@ -56,40 +59,58 @@ local function getFootball()
     end
 end
 
+-- Detect when football is kicked (we'll use touch for simplicity)
+local function onFootballKicked(hit)
+    -- Ensure the player or any other character part is the one making contact with the football
+    if hit.Parent and hit.Parent:FindFirstChild("Humanoid") then
+        local football = getFootball()
+        if football then
+            -- Check if Home or Away toggle is active and teleport the ball accordingly
+            if homeActive then
+                football.CFrame = HOME_CFRAME
+                print("Football teleported to Home!")
+            elseif awayActive then
+                football.CFrame = AWAY_CFRAME
+                print("Football teleported to Away!")
+            else
+                print("No team toggle active.")
+            end
+        end
+    end
+end
+
+-- Detect football kick (touch event)
+local football = getFootball()
+if football then
+    football.Touched:Connect(onFootballKicked)
+end
+
 -- Home toggle
 local HomeToggle = Tab:CreateToggle({
-   Name = "Teleport Football (Home)",
-   CurrentValue = false,
-   Flag = "TeleportHomeToggle",
-   Callback = function(Value)
-      local football = getFootball()
-      if football then
-         if Value then
-            -- Teleport to home
-            football.CFrame = HOME_CFRAME
-         else
-            -- Reset to original position when toggle is off
-            football.CFrame = originalCFrame
-         end
-      end
-   end,
+    Name = "Teleport Football (Home)",
+    CurrentValue = false,
+    Flag = "TeleportHomeToggle",
+    Callback = function(Value)
+        homeActive = Value
+        if Value then
+            print("Home toggle activated.")
+        else
+            print("Home toggle deactivated.")
+        end
+    end,
 })
 
 -- Away toggle
 local AwayToggle = Tab:CreateToggle({
-   Name = "Teleport Football (Away)",
-   CurrentValue = false,
-   Flag = "TeleportAwayToggle",
-   Callback = function(Value)
-      local football = getFootball()
-      if football then
-         if Value then
-            -- Teleport to away
-            football.CFrame = AWAY_CFRAME
-         else
-            -- Reset to original position when toggle is off
-            football.CFrame = originalCFrame
-         end
-      end
-   end,
+    Name = "Teleport Football (Away)",
+    CurrentValue = false,
+    Flag = "TeleportAwayToggle",
+    Callback = function(Value)
+        awayActive = Value
+        if Value then
+            print("Away toggle activated.")
+        else
+            print("Away toggle deactivated.")
+        end
+    end,
 })
